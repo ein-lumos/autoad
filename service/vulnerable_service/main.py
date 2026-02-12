@@ -1,6 +1,6 @@
-from storage import InMemoryStorage
+from storage import SQLiteStorage
 from auth import register, login
-from messages import send_message, view_inbox, view_sent, change_recipient, reply_to_message
+from messages import send_message, view_inbox, view_sent, change_recipient
 import os
 import time
 
@@ -28,8 +28,7 @@ def user_menu(storage, user):
         print("2. View inbox")
         print("3. View sent")
         print("4. Change recipient")
-        print("5. Reply to message")
-        print("6. Logout")
+        print("5. Logout")
 
         choice = input("> ")
 
@@ -42,11 +41,9 @@ def user_menu(storage, user):
         elif choice == "4":
             change_recipient(storage, user)
         elif choice == "5":
-            reply_to_message(storage, user)
-        elif choice == "6":
             break
         else:
-            print("Invalid choice! Choose 1, 2, 3, 4, 5 or 6")
+            print("Invalid choice! Choose 1, 2, 3, 4 or 5")
 
 
 def main_menu(storage):
@@ -71,7 +68,7 @@ def main_menu(storage):
 
 
 def main():
-    storage = InMemoryStorage()
+    storage = SQLiteStorage()
 
     clear()
     print_banner()
