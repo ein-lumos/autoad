@@ -23,10 +23,10 @@ def send_message(storage, current_user):
     if recipient.id == current_user.id:
         print("You cannot send valentine to yourself!")
         return	
-    # возможно это не нужно
-    if storage.count_messages() >= 1000:
-        print("Valentine's limit reached.")
-        return
+    # защита от переполнения
+    # if len(storage.messages) >= 1000:
+    #     print("Valentine's limit reached.")
+    #     return
 
     message = storage.add_message(
         current_user.id,
@@ -49,9 +49,7 @@ def view_inbox(storage, current_user):
         print(f"ID: {msg.id}")
         print(f"From: {storage.get_user_by_id(msg.sender_id).username}")
         print(f"Text: {msg.text}")
-        print(f"Read: {msg.is_read}")
 
-        storage.mark_as_read(msg.id)
 
 
 def view_sent(storage, current_user):
@@ -66,7 +64,6 @@ def view_sent(storage, current_user):
         print(f"ID: {msg.id}")
         print(f"To: {storage.get_user_by_id(msg.recipient_id).username}")
         print(f"Text: {msg.text}")
-        print(f"Read: {msg.is_read}")
 
 
 def change_recipient(storage, current_user):
@@ -84,14 +81,10 @@ def change_recipient(storage, current_user):
         print("Valentine not found!")
         return
 
-    # здесь можно впихнуть уязвимость
-    if message.sender_id != current_user.id:
-        print("Access denied!")
-        return
-
-    if message.is_read:
-        print("Can't change recipient after reading!")
-        return
+    # проверка на владельца валентинки
+    #if message.sender_id != current_user.id:
+    #    print("Access denied!")
+    #    return
 
     new_recipient = storage.get_user_by_username(new_recipient_username)
 
@@ -106,3 +99,37 @@ def change_recipient(storage, current_user):
     storage.update_recipient(message.id, new_recipient.id)
     print("Recipient updated!")
 
+def reply_to_message(storage, current_user):
+    try:
+        msg_id = int(input("Original message ID: ").strip())
+    except ValueError:
+        print("Invalid ID!")
+        return
+
+    orig = storage.get_message(msg_id)
+    if not orig:
+        print("Message not found!")
+        return
+
+    sender = storage.get_user_by_id(orig.sender_id)
+    recipient = storage.get_user_by_id(orig.recipient_id)
+    print(f"\nOriginal message (ID: {orig.id}):")
+    print(f"From: {sender.username}")
+    print(f"To: {recipient.username}")
+    print(f"Text: {orig.text}")
+    print("-" * 30)
+
+    if current_user.id == orig.sender_id:
+        print("You cannot reply to your own message!")
+        return
+
+    text = input("Reply text: ").strip()
+    if not text:
+        print("Text cannot be empty!")
+        return
+    if len(text) > 256:
+        print("Text too long!")
+        return
+
+    storage.add_message(current_user.id, orig.sender_id, text)
+    print("Reply sent.")

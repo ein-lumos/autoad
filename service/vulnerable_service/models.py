@@ -14,3 +14,4 @@ class Message:
     recipient_id: int
     text: str
     created_at: datetime
+    is_read: bool = False
