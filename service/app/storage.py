@@ -13,7 +13,6 @@ class RedisStorage:
         self._init_id_pool()
 
     def _generate_id_pool(self):
-        """Генерирует детерминированный список из 500 ID"""
         pool = []
         for i in range(self.ID_COUNT):
             data = f"{self.SERVER_SECRET}:{i}:pool"
@@ -23,7 +22,6 @@ class RedisStorage:
         return sorted(pool) 
 
     def _init_id_pool(self):
-        """Инициализирует пул ID в Redis, если его нет"""
         if not self.r.exists("global:id_pool"):
             pool = self._generate_id_pool()
             for msg_id in pool:
@@ -31,7 +29,6 @@ class RedisStorage:
             self.r.set("global:id_pool_index", 0)
 
     def _get_next_id(self):
-        """Берёт следующий ID из пула по кругу"""
         index = int(self.r.get("global:id_pool_index"))
         pool_size = self.r.llen("global:id_pool")
         
