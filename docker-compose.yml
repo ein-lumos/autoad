@@ -1,22 +1,43 @@
-version: "3.9"
-
 services:
   valentine:
     build: .
     container_name: valentine_service
 
+    depends_on:
+      redis:
+        condition: service_healthy
+
     environment:
-      - PORT=5000
-
+      - PORT=${PORT:-5000}
     ports:
-      - "${PORT}:5000"
+      - "${PORT}:5000"   
 
-    deploy:
-      resources:
-        limits:
-          cpus: "0.5"
-          memory: 256M
+    restart: unless-stopped
 
     mem_limit: 256m
     cpus: 0.5
+
+    networks:
+      - internal
+
+  redis:
+    image: redis:7-alpine
+    container_name: valentine_redis
+
+    command: ["redis-server", "--save", "", "--appendonly", "no"]
+
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+    restart: unless-stopped
+
+    networks:
+      - internal
+
+networks:
+  internal:
+    driver: bridge
 
