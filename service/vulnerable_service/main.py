@@ -1,4 +1,4 @@
-from storage import SQLiteStorage
+from storage import RedisStorage
 from auth import register, login
 from messages import send_message, view_inbox, view_sent, change_recipient, reply_to_message
 import os
@@ -71,7 +71,7 @@ def main_menu(storage):
 
 
 def main():
-    storage = SQLiteStorage()
+    storage = RedisStorage()
 
     clear()
     print_banner()
