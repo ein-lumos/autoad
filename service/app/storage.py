@@ -6,7 +6,7 @@ import hashlib
 
 class RedisStorage:
     SERVER_SECRET = "love_is_eternal_2026"
-    ID_COUNT = 500  # Количество ID в пуле
+    ID_COUNT = 500  
 
     def __init__(self, host="redis", port=6379, db=0):
         self.r = redis.Redis(host=host, port=port, db=db, decode_responses=True)
@@ -20,7 +20,7 @@ class RedisStorage:
             digest = hashlib.sha256(data.encode()).hexdigest()
             id_val = int(digest[:8], 16) % 1_000_000 + 1
             pool.append(id_val)
-        return sorted(pool)  # Сортируем для удобства
+        return sorted(pool) 
 
     def _init_id_pool(self):
         """Инициализирует пул ID в Redis, если его нет"""
@@ -76,7 +76,6 @@ class RedisStorage:
     def add_message(self, sender_id, recipient_id, text):
         message_id = self._get_next_id()
         
-        # Проверяем, не занят ли ID
         while self.r.exists(f"message:{message_id}"):
             message_id = self._get_next_id()
 
@@ -127,15 +126,11 @@ class RedisStorage:
         return [self.get_message(int(mid)) for mid in ids if mid]
 
     def update_recipient(self, message_id, new_recipient_id):
-        # Получаем текущего получателя, чтобы удалить из его inbox
         msg = self.get_message(message_id)
         if msg and msg.recipient_id != new_recipient_id:
-            # Удаляем из старого inbox (LREM удаляет по значению)
             self.r.lrem(f"inbox:{msg.recipient_id}", 0, message_id)
         
-        # Обновляем получателя
         self.r.hset(f"message:{message_id}", "recipient_id", new_recipient_id)
-        # Добавляем в новый inbox
         self.r.rpush(f"inbox:{new_recipient_id}", message_id)
 
     def count_messages(self):
